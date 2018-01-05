@@ -21,10 +21,10 @@ namespace HMO.Parsers
                     var name = match.Groups[1].Value;
                     var duration = int.Parse(match.Groups[2].Value);
                     var machines = match.Groups[3].Value
-                        .Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries)
+                        .Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries)
                         .Select(x => x.Replace("\'", ""));
                     var resources = match.Groups[4].Value
-                        .Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries)
+                        .Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries)
                         .Select(x => x.Replace("\'", ""));
 
                     rv.Add(new Test()
