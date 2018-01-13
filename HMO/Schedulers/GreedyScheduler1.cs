@@ -41,14 +41,10 @@ namespace HMO.Schedulers
 
         private void prepareDataStructures()
         {
-            _scheduleTable.Clear();
-
             foreach (string m in _machines)
             {
                 _scheduleTable[m] = new string[MaxDuration];
             }
-
-            _resourcesTable.Clear();
 
             foreach (var r in _resources)
             {
@@ -57,7 +53,6 @@ namespace HMO.Schedulers
             }
 
             _unscheduled = _tests.Values.OrderBy(x => _random.Next()).ToList();
-
         }
 
         public IEnumerable<string> Schedule()
@@ -66,22 +61,29 @@ namespace HMO.Schedulers
             int testsScheduled = 0;
 
             // Schedule tests that can run on only one machine
-            Test test;
-            while ((test = _unscheduled.Where(x => x.MachinesItCanRunOn.Count() == 1).FirstOrDefault()) != null)
+            var oneMachineTests = _unscheduled
+                .Where(x => x.MachinesItCanRunOn.Count() == 1).ToList();
+
+            foreach (var test1m in oneMachineTests)
             {
-                scheduleTestOnRandomAvailableMachine(test);
+                scheduleTestOnRandomAvailableMachine(test1m);
                 ++testsScheduled;
             }
 
+            // Order unscheduled descending by number of required global resources
+            // and machines they can run on
+            // _unscheduled = _unscheduled.OrderBy(x => x.ResourcesRequired.Count())
+            //    .ThenBy(x => x.MachinesItCanRunOn.Count()).ToList();
+            // -> gave worse results
+
             // Schedule all other tests
+            Test test;
             while (_unscheduled.Count() > 0)
             {
                 test = _unscheduled.First();
                 scheduleTestOnRandomAvailableMachine(test);
                 ++testsScheduled;
             }
-
-            // Console.WriteLine("Total {0} tests scheduled", testsScheduled);
 
             // Calculate total time of schedule
             _totalTime = 0;
@@ -114,16 +116,16 @@ namespace HMO.Schedulers
                     var test = _tests[testName];
                     rv.Add(new Tuple<Test, int, string>(test, i, mt.Key));
 
-                    while (_scheduleTable[mt.Key][i] == testName)
-                        ++i;
-                    --i;
+                    i += test.Duration - 1;
                 }
             }
 
             if (rv.Count != _tests.Count)
             {
-                var diffInSchedule = _tests.Keys.ToList().Except<string>(_scheduleTable.SelectMany(x => x.Value));
-                var diffInOutput = _tests.Keys.ToList().Except<string>(rv.Select(x => x.Item1.Name));
+                var diffInSchedule = _tests.Keys.ToList()
+                    .Except<string>(_scheduleTable.SelectMany(x => x.Value));
+                var diffInOutput = _tests.Keys.ToList()
+                    .Except<string>(rv.Select(x => x.Item1.Name));
 
                 foreach (var x in diffInSchedule)
                 {
@@ -134,7 +136,7 @@ namespace HMO.Schedulers
                     Console.WriteLine("No test " + x + " in output");
                 }
 
-                throw new Exception("Some tests are lost :/");
+                throw new Exception("Some tests are lost");
             }
 
             return rv.Select(x => "\'" + x.Item1.Name + "\'," + x.Item2 + ",\'" + x.Item3 + "\'.").ToList();
@@ -159,7 +161,7 @@ namespace HMO.Schedulers
                         foreach (var r in test.ResourcesRequired)
                         {
                             if (_resourcesTable[r][t] <= 0)
-                                throw new Exception("FAIL");
+                                throw new Exception("Scheduled test with global resource conflict");
 
                             _resourcesTable[r][t] -= 1;
                         }
@@ -168,10 +170,6 @@ namespace HMO.Schedulers
                     success = true;
                     _unscheduled.Remove(test);
                     break;
-                }
-                else
-                {
-                    throw new Exception("IDK");
                 }
             }
 
