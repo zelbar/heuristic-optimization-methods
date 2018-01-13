@@ -209,33 +209,5 @@ namespace HMO.Schedulers
 
             return true;
         }
-
-        private bool doesntConflictWithGlobalResources(Test test, int timeStartIdx)
-        {
-            // iterate over all machines
-            foreach (var m in _machines)
-            {
-                // iterate over all time units where the test is taking place
-                for (int t = timeStartIdx; t < timeStartIdx + test.Duration; ++t)
-                {
-                    // iterate over all global resources the test requires
-                    foreach (var gr in test.ResourcesRequired)
-                    {
-                        // check if another test is running on that machine in that time unit
-                        if (_scheduleTable[m][t] != null)
-                        {
-                            Test test2 = _tests[_scheduleTable[m][t]];
-                            // if the already running test occupied a resource we need...
-                            if (test2.ResourcesRequired.Contains(gr))
-                            {
-                                return false;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return true;
-        }
     }
 }
