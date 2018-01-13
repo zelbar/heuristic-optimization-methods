@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "HMO.Runner": {
+      "commandName": "Project",
+      "commandLineArgs": "tests/ts8.txt 1",
+      "workingDirectory": "C:\\Users\\Zeljko\\Source\\Repos\\heuristic-optimization-methods"
+    }
+  }
+}
