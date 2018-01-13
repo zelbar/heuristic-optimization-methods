@@ -180,19 +180,20 @@ namespace HMO.Schedulers
         {
             for (int t = 0; t < MaxDuration - test.Duration - 1; ++t)
             {
-                if (timeIdxFeasableForTestAndMachine(test, machine, t))
+                if (timeIdxFeasableForTestAndMachine(test, machine, t, ref t))
                     return t;
             }
 
             return -1;
         }
 
-        private bool timeIdxFeasableForTestAndMachine(Test test, string m, int t)
+        private bool timeIdxFeasableForTestAndMachine(Test test, string m, int t, ref int nextIdx)
         {
             for (int t2 = t; t2 < t + test.Duration; ++t2)
             {
                 if (_scheduleTable[m][t2] != null)
                 {
+                    nextIdx = t2 + _tests[_scheduleTable[m][t2]].Duration + 1;
                     return false;
                 }
 
